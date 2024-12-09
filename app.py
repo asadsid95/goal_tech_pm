@@ -7,6 +7,7 @@ pymysql.install_as_MySQLdb()
 
 app = Flask(__name__)
 app.config.from_object(DevelopmentConfig)
+# app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://root:root@127.0.0.1:3306/test"
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
