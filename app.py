@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, render_template,url_for, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from config import DevelopmentConfig
@@ -11,6 +11,25 @@ app.config.from_object(DevelopmentConfig)
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
+
+#-------------------------------------------
+
+# @app.route("/", methods=["GET", "POST"])
+def registration():
+
+    # if request.method=="POST":
+    #     print(username)    
+    #     username=request.form("username")
+    #     formData = User(username )
+    #     db.session.add(formData)
+    
+    return render_template("registration.html", title="Registration")
+
+@app.route("/login")
+def login():
+    return render_template("login.html")
+
+#-------------------------------------------
 
 # User model
 class User(db.Model):                  
@@ -26,7 +45,3 @@ class User(db.Model):
 
     def __repr__(self):
         return f'<User {self.username}>'
-
-@app.route("/", methods=["POST"])
-def registration():
-    
