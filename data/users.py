@@ -1,16 +1,15 @@
-from flask import Flask
+from flaskr import create_app
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from config import DevelopmentConfig
+from flaskr import db
 import pymysql
-pymysql.install_as_MySQLdb()
+pymysql.install_as_MySQLdb
 
-app = Flask(__name__)
-app.config.from_object(DevelopmentConfig)
-# app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://root:root@127.0.0.1:3306/test"
+# app=create_app()
+# print(app)
 
-db = SQLAlchemy(app)
-migrate = Migrate(app, db)
+# db = SQLAlchemy(app)
+# migrate=Migrate(app, db)
 
 # User model
 class User(db.Model):                  
@@ -27,6 +26,4 @@ class User(db.Model):
     def __repr__(self):
         return f'<User {self.username}>'
 
-@app.route("/", methods=["POST"])
-def registration():
-    
+

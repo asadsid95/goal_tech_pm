@@ -1,8 +1,8 @@
-"""update in env for DB URL
+"""initialization
 
-Revision ID: 91bb75f37d9b
-Revises: 4ede5d87f9a6
-Create Date: 2024-12-08 19:29:55.176572
+Revision ID: b0026bc419c8
+Revises: 
+Create Date: 2024-12-09 21:48:44.256117
 
 """
 from alembic import op
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '91bb75f37d9b'
-down_revision = '4ede5d87f9a6'
+revision = 'b0026bc419c8'
+down_revision = None
 branch_labels = None
 depends_on = None
 
