@@ -1,9 +1,11 @@
-from flask import Flask, render_template,url_for, request
+from flask import Flask, render_template,url_for, request,redirect
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from config import DevelopmentConfig
 import pymysql
 pymysql.install_as_MySQLdb()
+
+from forms import RegisterForm
 
 app = Flask(__name__)
 app.config.from_object(DevelopmentConfig)
@@ -14,16 +16,16 @@ migrate = Migrate(app, db)
 
 #-------------------------------------------
 
-# @app.route("/", methods=["GET", "POST"])
+@app.route("/", methods=["GET", "POST"])
 def registration():
-
-    # if request.method=="POST":
-    #     print(username)    
-    #     username=request.form("username")
-    #     formData = User(username )
-    #     db.session.add(formData)
+    form = RegisterForm()
+    print(request.method)
+    if request.method == "POST":
+        user = form.username.data
+        print(user)
+        return redirect(url_for('login'))
     
-    return render_template("registration.html", title="Registration")
+    return render_template("registration.html", title="Registration", form=form)
 
 @app.route("/login")
 def login():
