@@ -3,5 +3,8 @@
 <title>{{title}}</title>
 <h1>{{title}}</h1>
 <form method="post">
-  {{form.username.label}} {{form.username(size=20)}} {{form.submit}}
+  <div>{{form.email.label}} {{form.email(size=20)}}</div>
+  <div>{{form.username.label}} {{form.username(size=20)}}</div>
+  <div>{{form.password.label}} {{form.password(size=20)}}</div>
+  {{form.submit}}
 </form>

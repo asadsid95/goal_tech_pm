@@ -21,11 +21,16 @@ def registration():
     form = RegisterForm()
     print(request.method)
     if request.method == "POST":
-        user = form.username.data
+        user = User(username=form.username.data, email=form.email.data, password_hash=form.password.data)
         print(user)
+        db.session.add(user)
+        db.session.commit()
         return redirect(url_for('login'))
+    else:
+        print("fail")
+        return render_template("registration.html", title="Registration", form=form)
     
-    return render_template("registration.html", title="Registration", form=form)
+    # return render_template("registration.html", title="Registration", form=form)
 
 @app.route("/login")
 def login():
@@ -46,4 +51,4 @@ class User(db.Model):
                           onupdate=db.func.current_timestamp())
 
     def __repr__(self):
-        return f'<User {self.username}>'
+        return f'<User {self.username} {self.email} {self.password_hash}>'
