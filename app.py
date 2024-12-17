@@ -4,25 +4,27 @@ from flask_migrate import Migrate
 from config import DevelopmentConfig
 import pymysql
 pymysql.install_as_MySQLdb()
+import bcrypt
 
-from forms import RegisterForm
+from forms import RegisterForm, LoginForm
 
 app = Flask(__name__)
 app.config.from_object(DevelopmentConfig)
-# app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://root:root@127.0.0.1:3306/test"
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
 #-------------------------------------------
 
+# TODO: add check for existing username
 @app.route("/", methods=["GET", "POST"])
 def registration():
     form = RegisterForm()
     print(request.method)
     if request.method == "POST":
-        user = User(username=form.username.data, email=form.email.data, password_hash=form.password.data)
-        print(user)
+        
+        hashed_password=bcrypt.hashpw(form.password.data.encode('utf-8'), bcrypt.gensalt())
+        user = User(username=form.username.data, email=form.email.data, password_hash=hashed_password)
         db.session.add(user)
         db.session.commit()
         return redirect(url_for('login'))
@@ -32,10 +34,29 @@ def registration():
     
     # return render_template("registration.html", title="Registration", form=form)
 
-@app.route("/login")
-def login():
-    return render_template("login.html")
 
+@app.route("/login", methods=["GET","POST"])
+def login():
+    login_form = LoginForm()
+    if request.method =="POST":
+        username=login_form.username.data
+        password=login_form.password.data
+        
+        #TODO How to filter by also converting password from form into  
+        # for user in db.session.query(User).filter(User.username==username, User.password_hash==password).all():
+        for user in db.session.query(User).filter(User.username==username).all():
+                # print(bcrypt.checkpw(password.encode('utf-8'), user.password_hash.encode('utf-8')))
+            if (user.username == username and bcrypt.checkpw(password.encode('utf-8'), user.password_hash.encode('utf-8'))):
+                return redirect(url_for('home'))
+            
+        return "Username doesnt exist"
+        # return "Logged in!"
+    else:    
+       return render_template("login.html", title="Login", form=login_form)
+
+@app.route("/home")
+def home():
+    return render_template("home.html", title="Home")
 #-------------------------------------------
 
 # User model

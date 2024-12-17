@@ -1,19 +1,9 @@
 <!DOCTYPE html>
 
-<title>Login</title>
+<h1>{{title}}</h1>
 
-<div>
-
-    <div>
-    <label>Enter your username:</label>
-    <input type="email"></input>
-</div>
-<div>
-    <label>Enter a password:</label>
-    <input type="Password"></input>
-</div>
-
-<div>
-    <button>Login</button>
-</div>
-</div>
+<form method="post">
+  <div>{{form.username.label}} {{form.username}}</div>
+  <div>{{form.password.label}} {{form.password}}</div>
+  <div>{{form.submit}}</div>
+</form>
