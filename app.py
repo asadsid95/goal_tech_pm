@@ -26,11 +26,13 @@ def registration():
         user = User(username=form.username.data, email=form.email.data, password_hash=hashed_password)
     
         if db.session.query(User).filter(User.username == form.username.data).first():
-            return "Username already exist, please choose another username."
+            flash( "Username already exist, please choose another username.","error")
+            return  render_template("registration.html", title="Registration", form=form)
         else:
             try:
                 db.session.add(user)
                 db.session.commit()
+                flash("User created successfully!", "success")
                 return redirect(url_for('login'))
             except IntegrityError:
                 db.session.rollback()
