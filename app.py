@@ -33,6 +33,7 @@ def registration():
                 db.session.add(user)
                 db.session.commit()
                 flash("User created successfully!", "success")
+                #TODO: Verify if method=post in html and redirecting from backend is correct for form submission
                 return redirect(url_for('login'))
             except IntegrityError:
                 db.session.rollback()
