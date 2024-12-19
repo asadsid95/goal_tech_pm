@@ -54,10 +54,12 @@ def login():
         # for user in db.session.query(User).filter(User.username==username, User.password_hash==password).all():
         for user in db.session.query(User).filter(User.username==username).all():
             if (user.username == username and bcrypt.checkpw(password.encode('utf-8'), user.password_hash.encode('utf-8'))):
+                flash("Successful login", "success")
                 return redirect(url_for('home'))
-            
-        return "Username does not exist"
-        # return "Logged in!"
+        else:
+            flash("Username does not exist", 'error')
+            return render_template("login.html", title="Login", form=login_form)
+
     else:    
        return render_template("login.html", title="Login", form=login_form)
 
