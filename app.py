@@ -6,6 +6,7 @@ from config import DevelopmentConfig
 import pymysql
 pymysql.install_as_MySQLdb()
 import bcrypt
+from datetime import datetime
 
 from forms import RegisterForm, LoginForm
 
@@ -17,7 +18,7 @@ migrate = Migrate(app, db)
 
 #-------------------------------------------
 
-@app.route("/", methods=["GET", "POST"])
+@app.route("/registration", methods=["GET", "POST"])
 def registration():
     form = RegisterForm()
     if request.method == "POST":
@@ -50,20 +51,36 @@ def login():
         username=login_form.username.data
         password=login_form.password.data
         
-        #TODO How to filter by also converting password from form to hash in order to match query results 
-        # for user in db.session.query(User).filter(User.username==username, User.password_hash==password).all():
-        for user in db.session.query(User).filter(User.username==username).all():
-            if (user.username == username and bcrypt.checkpw(password.encode('utf-8'), user.password_hash.encode('utf-8'))):
+        user_in_db = db.session.query(User).filter(User.username == username).first()
+    
+        if user_in_db:
+            if (bcrypt.checkpw(password.encode('utf-8'), user_in_db.password_hash.encode('utf-8'))):
+                
+                # reset login_attempts to 0 and failed attempt time to none
+                user_in_db.loginAttempt = 0
+                user_in_db.last_failed_login = None
+                
+                db.session.commit()
+                
                 flash("Successful login", "success")
                 return redirect(url_for('home'))
+            else:
+                
+                # increment login_attempts by 1
+                user_in_db.loginAttempt += 1
+                user_in_db.last_failed_login = datetime.now()
+                
+                db.session.commit()
+                flash("Password does not match", 'error')
+                return render_template("login.html", title="Login", form=login_form)
         else:
-            flash("Username does not exist", 'error')
+            flash("Username does not exist", "error")
             return render_template("login.html", title="Login", form=login_form)
-
+                
     else:    
-       return render_template("login.html", title="Login", form=login_form)
+        return render_template("login.html", title="Login", form=login_form)
 
-@app.route("/home")
+@app.route("/")
 def home():
     return render_template("home.html", title="Home")
 #-------------------------------------------
@@ -77,6 +94,8 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
     isVerified = db.Column(db.Boolean, default=False)
+    loginAttempt = db.Column(db.Integer, default=0)
+    last_failed_login = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
     updated_at = db.Column(db.DateTime, default=db.func.current_timestamp(), 
                           onupdate=db.func.current_timestamp())
