@@ -1,4 +1,4 @@
-from flask import Flask, render_template,url_for, request,redirect,flash
+from flask import Flask, render_template,url_for, request,redirect,flash,session
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
 from flask_migrate import Migrate
@@ -10,8 +10,10 @@ from datetime import datetime
 
 from forms import RegisterForm, LoginForm
 
+#------------------------------------------
 app = Flask(__name__)
 app.config.from_object(DevelopmentConfig)
+app.secret_key = "session-secret"
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
@@ -42,8 +44,6 @@ def registration():
     else:
         return render_template("registration.html", title="Registration", form=form)
     
-
-
 @app.route("/login", methods=["GET","POST"])
 def login():
     login_form = LoginForm()
@@ -62,6 +62,7 @@ def login():
                 
                 db.session.commit()
                 
+                session["username"] = user_in_db.username
                 flash("Successful login", "success")
                 return redirect(url_for('home'))
             else:
@@ -82,6 +83,12 @@ def login():
 
 @app.route("/")
 def home():
+    
+    if session:
+        print(session)
+    else:
+        print("no session remains")
+    
     return render_template("home.html", title="Home")
 #-------------------------------------------
 
