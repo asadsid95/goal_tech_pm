@@ -6,14 +6,16 @@ from config import DevelopmentConfig
 import pymysql
 pymysql.install_as_MySQLdb()
 import bcrypt
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from forms import RegisterForm, LoginForm
 
 #------------------------------------------
 app = Flask(__name__)
 app.config.from_object(DevelopmentConfig)
-app.secret_key = "session-secret"
+
+app.config['SESSION_PERMANENT'] = False
+
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
@@ -54,28 +56,38 @@ def login():
         user_in_db = db.session.query(User).filter(User.username == username).first()
     
         if user_in_db:
-            if (bcrypt.checkpw(password.encode('utf-8'), user_in_db.password_hash.encode('utf-8'))):
+            # if (user_in_db.loginAttempt > 5):
+            #     flash(f'Account with username "{username}" is locked. Please try again in 1 minute.')
+            #     return render_template("login.html", title="Login", form=login_form)
+
+                if not reset_user_loginAttempts(user_in_db):
+                    flash(f'Account with username "{username}" is locked. Please try again in 1 minute.')
+                    return render_template("login.html", title="Login", form=login_form)
+                    
+            # else:
+                if (bcrypt.checkpw(password.encode('utf-8'), user_in_db.password_hash.encode('utf-8'))):
                 
                 # reset login_attempts to 0 and failed attempt time to none
-                user_in_db.loginAttempt = 0
-                user_in_db.last_failed_login = None
-                
-                db.session.commit()
-                
-                session["username"] = user_in_db.username
-                flash("Successful login", "success")
-                return redirect(url_for('home'))
-            else:
-                
-                # increment login_attempts by 1
-                user_in_db.loginAttempt += 1
-                user_in_db.last_failed_login = datetime.now()
-                
-                db.session.commit()
-                flash("Password does not match", 'error')
-                return render_template("login.html", title="Login", form=login_form)
+                    user_in_db.loginAttempt = 0
+                    user_in_db.last_failed_login = None
+                    
+                    db.session.commit()
+                    
+                    #TODO: Investigate why cookie is being created outside of this scope such as visiting any other page.
+                    session["username"] = user_in_db.username
+                    flash("Successful login", "success")
+                    return redirect(url_for('home'))
+                else:
+                    
+                    # increment login_attempts by 1
+                    user_in_db.loginAttempt += 1
+                    user_in_db.last_failed_login = datetime.now()
+                    
+                    db.session.commit()
+                    flash("Password does not match", 'error')
+                    return render_template("login.html", title="Login", form=login_form)
         else:
-            flash("Username does not exist", "error")
+            flash(f'Username "{username}" does not exist', "error")
             return render_template("login.html", title="Login", form=login_form)
                 
     else:    
@@ -84,12 +96,30 @@ def login():
 @app.route("/")
 def home():
     
-    if session:
+    if "username" in session:
         print(session)
+        return render_template("home.html", title="Home")
     else:
-        print("no session remains")
+        print("no session exist")
+        return render_template("not_found.html",reason='Session')
     
-    return render_template("home.html", title="Home")
+#-------------------------------------------
+#Helper function
+
+def reset_user_loginAttempts(user_in_db):
+    if user_in_db.loginAttempt >= 5:
+        # when current time has not exceeded 1 minute
+        if  datetime.now() < user_in_db.last_failed_login + timedelta(minutes=1):
+            print('time has not passed 1 minute')
+            return False
+        else:
+            user_in_db.loginAttempt = 0
+            user_in_db.last_failed_login = None
+            db.session.commit()
+            print("account is now unlocked")
+    else:
+        return True
+
 #-------------------------------------------
 
 # User model
