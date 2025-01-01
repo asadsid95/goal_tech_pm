@@ -8,7 +8,7 @@ pymysql.install_as_MySQLdb()
 import bcrypt
 from datetime import datetime, timedelta
 
-from forms import RegisterForm, LoginForm
+from forms import RegisterForm, LoginForm, EntryForm
 
 #------------------------------------------
 app = Flask(__name__)
@@ -98,7 +98,11 @@ def home():
     
     if "username" in session:
         print(session)
-        return render_template("home.html", title="Home")
+        
+        entry_form=EntryForm()
+        
+        
+        return render_template("home.html", title="Home", form=entry_form)
     else:
         print("no session exist")
         return render_template("not_found.html",reason='Session')
@@ -139,3 +143,28 @@ class User(db.Model):
 
     def __repr__(self):
         return f'User {self.username} {self.email} {self.password_hash}'
+
+entry_tags = db.Table(
+    'entry_tags',
+    db.Column('entry_id', db.Integer, db.ForeignKey('entry.id'), primary_key=True),
+    db.Column('tag_id', db.Integer, db.ForeignKey('tag.id'), primary_key=True)
+)
+
+class Entry(db.Model):
+    __tablename__ = "entry"
+    
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(240), nullable = False)
+    content =db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=db.func.now())
+    updated_at = db.Column(db.DateTime, onupdate=db.func.now())
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    tags = db.relationship('tag', secondary=entry_tags, back_populates='entries')
+
+class Tag(db.Model):
+    __tablename__ = 'tag'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), unique=True, nullable=False)
+    entries = db.relationship('entry', secondary=entry_tags, back_populates='tags')
+    
+    
