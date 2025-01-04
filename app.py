@@ -75,6 +75,7 @@ def login():
                     
                     #TODO: Investigate why cookie is being created outside of this scope such as visiting any other page.
                     session["username"] = user_in_db.username
+                    session['user_id'] = user_in_db.id
                     flash("Successful login", "success")
                     return redirect(url_for('home'))
                 else:
@@ -93,20 +94,65 @@ def login():
     else:    
         return render_template("login.html", title="Login", form=login_form)
 
-@app.route("/")
+@app.route("/", methods=["GET", "POST"])
 def home():
     
+    # if "username" in session and request.method == "POST":
+    entry_form=EntryForm()
     if "username" in session:
-        print(session)
+
+        # show all existing entries
+        if request.method =="GET":
+            
+            
+            return render_template("home.html", title="Home", form=entry_form)
         
-        entry_form=EntryForm()
-        
+        elif request.method=="POST":
+            
+            title = entry_form.title.data
+            content=entry_form.content.data
+            tag=entry_form.tag.data
+            
+            # To add entry, I need to get user.id and tag.id before sending query to add the entry
+            
+            check_tag = db.session.query(Tag).filter(Tag.name==tag).first()
+            if not check_tag:
+                return f"Tag {tag} does not exist."
+            tag_id = check_tag.id
+            
+            user_id = session["user_id"]
+            user_entry=Entry(title=title, content=content, user_id=user_id, tag_id=tag_id)
+                       
+            db.session.add(user_entry)
+            db.session.commit()
         
         return render_template("home.html", title="Home", form=entry_form)
     else:
         print("no session exist")
         return render_template("not_found.html",reason='Session')
+
+@app.route("/temp_entries", methods=["GET"])
+def TEMP_show_entries():
     
+    existing_entries = db.session.query(Entry).all()
+    
+    return render_template("temp_show_entries.html", entries = existing_entries)
+    
+# Endpoint to add tags 
+@app.route("/tag_create", methods=["POST"])
+def tag_create():
+
+    #TODO - Add tags into database table 'Tag'
+    tags_from_client = request.get_json().get("tag")
+    # print(tags_from_client.values())
+    
+    for tag in tags_from_client:
+        tag_to_add = Tag(name=tag)
+        db.session.add(tag_to_add)
+        db.session.commit()
+    
+    
+    return "tag added"
 #-------------------------------------------
 #Helper function
 
@@ -140,6 +186,8 @@ class User(db.Model):
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
     updated_at = db.Column(db.DateTime, default=db.func.current_timestamp(), 
                           onupdate=db.func.current_timestamp())
+    
+    # entries = db.relationship('Entry', backref='user', lazy=True)
 
     def __repr__(self):
         return f'User {self.username} {self.email} {self.password_hash}'
@@ -159,12 +207,20 @@ class Entry(db.Model):
     created_at = db.Column(db.DateTime, default=db.func.now())
     updated_at = db.Column(db.DateTime, onupdate=db.func.now())
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    tags = db.relationship('tag', secondary=entry_tags, back_populates='entries')
+    tag_id = db.Column(db.Integer, db.ForeignKey('tag.id'), nullable=True)
+
+    # user = db.relationship('User', backref="entries")
+    
+    # tags = db.relationship('Tag', secondary=entry_tags, back_populates='entries')
+    
+    def __repr__(self) -> str:
+        return f"Entry {self.title} {self.content} user_id:{self.user_id} tag_id{self.tag_id}"
 
 class Tag(db.Model):
     __tablename__ = 'tag'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), unique=True, nullable=False)
-    entries = db.relationship('entry', secondary=entry_tags, back_populates='tags')
+    # entries = db.relationship('Entry', secondary=entry_tags, back_populates='tags')
     
-    
+    def __repr__(self) -> str:
+        return f"Tag {self.name}"

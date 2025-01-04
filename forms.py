@@ -15,7 +15,7 @@ class LoginForm(FlaskForm):
     submit=SubmitField("Login")
     
 class EntryForm(FlaskForm):
-    title=StringField("Title of entry", [DataRequired(), Length(min=4, max=240, message=("Title is too short or long"))])
-    content=StringField("Content of entry",  [DataRequired(), Length(min=4, max=240, message=("Content is too short or long"))])
-    tags=SelectField("Tags", choices=[("thought","Thought"),("hobby", 'Hobby'),('career thought', "CareerThought")])
+    title=StringField("Title of entry", [DataRequired(message="Title is required"), Length(min=4, max=240, message=("Title is too short or long"))])
+    content=StringField("Content of entry",  [DataRequired(message="Content is required"), Length(min=4, max=240, message=("Content is too short or long"))])
+    tag=SelectField("Tag", choices=[("thought","Thought"),("hobby", 'Hobby'),('career thought', "CareerThought"), ("plant watering", "PlantWatering")])
     submit=SubmitField("Submit entry")
