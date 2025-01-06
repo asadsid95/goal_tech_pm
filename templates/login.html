@@ -12,8 +12,25 @@
 <h1>{{title}}</h1>
 
 <form method="post">
-  <div>{{form.username.label}} {{form.username}}</div>
-  <div>{{form.password.label}} {{form.password}}</div>
+  {{ form.csrf_token }}
+  <div>
+    {{form.username.label}} {{form.username}} {% if form.username.errors %}
+    <ul class="error">
+      {% for error in form.username.errors %}
+      <li>{{ error }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+  </div>
+  <div>
+    {{form.password.label}} {{form.password}} {% if form.password.errors %}
+    <ul class="error">
+      {% for error in form.password.errors %}
+      <li>{{ error }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+  </div>
   <div>{{form.submit}}</div>
 </form>
 

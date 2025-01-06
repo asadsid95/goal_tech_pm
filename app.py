@@ -7,7 +7,7 @@ import pymysql
 pymysql.install_as_MySQLdb()
 import bcrypt
 from datetime import datetime, timedelta
-
+from flask_wtf import CSRFProtect
 from forms import RegisterForm, LoginForm, EntryForm
 
 #------------------------------------------
@@ -15,7 +15,7 @@ app = Flask(__name__)
 app.config.from_object(DevelopmentConfig)
 
 app.config['SESSION_PERMANENT'] = False
-
+# csrf = CSRFProtect(app)
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
@@ -49,16 +49,16 @@ def registration():
 @app.route("/login", methods=["GET","POST"])
 def login():
     login_form = LoginForm()
-    if request.method =="POST":
+
+    print(login_form.validate_on_submit())
+    if login_form.validate_on_submit():
+  
+        print("valdiated")
         username=login_form.username.data
         password=login_form.password.data
         
         user_in_db = db.session.query(User).filter(User.username == username).first()
-    
         if user_in_db:
-            # if (user_in_db.loginAttempt > 5):
-            #     flash(f'Account with username "{username}" is locked. Please try again in 1 minute.')
-            #     return render_template("login.html", title="Login", form=login_form)
 
                 if not reset_user_loginAttempts(user_in_db):
                     flash(f'Account with username "{username}" is locked. Please try again in 1 minute.')
@@ -90,9 +90,13 @@ def login():
         else:
             flash(f'Username "{username}" does not exist', "error")
             return render_template("login.html", title="Login", form=login_form)
-                
-    else:    
-        return render_template("login.html", title="Login", form=login_form)
+  
+        
+    else:
+        print("validate didn't pass")
+        print("Error:", login_form.errors)
+    return render_template("login.html", title="Login", form=login_form)
+
 
 @app.route("/", methods=["GET", "POST"])
 def home():
