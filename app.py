@@ -157,6 +157,11 @@ def tag_create():
     
     
     return "tag added"
+
+@app.route('/test')
+def test():
+    
+   return render_template('navigation.html')
 #-------------------------------------------
 #Helper function
 
