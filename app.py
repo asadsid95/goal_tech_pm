@@ -3,22 +3,51 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
 from flask_migrate import Migrate
 from config import DevelopmentConfig
+
 import pymysql
 pymysql.install_as_MySQLdb()
+
 import bcrypt
 from datetime import datetime, timedelta
 from flask_wtf import CSRFProtect
 from forms import RegisterForm, LoginForm, EntryForm
 
+import os
+from dotenv import find_dotenv, load_dotenv
+from authlib.integrations.flask_client import OAuth
+
 #------------------------------------------
 app = Flask(__name__)
 app.config.from_object(DevelopmentConfig)
+
+# for k,v in app.config.items():
+#     print(f'k:{k}, v:{v}')
+
+ENV_FILE = find_dotenv()
+if ENV_FILE:
+    load_dotenv(ENV_FILE)
+    
+app.secret_key = os.environ.get("APP_SECRET_KEY")
+
+oauth = OAuth(app)
+
+oauth.register(
+    "auth0",
+    client_id=os.environ.get("AUTH0_CLIENT_ID"),
+    client_secret=os.environ.get("AUTH0_CLIENT_SECRET"),
+    client_kwargs={
+        "scope": "openid profile email",
+    },
+    server_metadata_url=f'https://{os.environ.get("AUTH0_DOMAIN")}/.well-known/openid-configuration'
+)
 
 app.config['SESSION_PERMANENT'] = False
 # csrf = CSRFProtect(app)
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
+
+
 
 #-------------------------------------------
 
@@ -46,8 +75,8 @@ def registration():
     else:
         return render_template("registration.html", title="Registration", form=form)
     
-@app.route("/login", methods=["GET","POST"])
-def login():
+@app.route("/login1", methods=["GET","POST"])
+def login1():
     login_form = LoginForm()
 
     print(login_form.validate_on_submit())
@@ -96,6 +125,20 @@ def login():
         print("validate didn't pass")
         print("Error:", login_form.errors)
     return render_template("login.html", title="Login", form=login_form)
+
+@app.route('/login')
+def login():
+    return oauth.auth0.authorize_redirect(
+        redirect_uri=url_for("callback", _external=True)
+    )
+    
+@app.route("/callback", methods=["GET", "POST"])
+def callback():
+    token = oauth.auth0.authorize_access_token()
+    session["user"] = token
+    print(session['user'])
+    return redirect("/")
+
 
 
 @app.route("/", methods=["GET", "POST"])

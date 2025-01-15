@@ -9,3 +9,4 @@
 4. Im stuck at not knowing what happens at form submission time. Im not sure about the form element's attributes of method and action. Im also not sure how to point to another page after form submission
 5. Learned about setting default values after creating a DB migration by modifying the respective migration file in /migration/versions. Upgrade the model afterwards
 6. Noticed a cookie is created when visiting every page however expected behaviour is to created upon successful login. When successful login happen, a new cookie is created.
+7. Adding auth into the app; need to figure out where to add callba

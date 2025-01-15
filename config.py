@@ -10,4 +10,6 @@ class Config:
 class DevelopmentConfig(Config):
     SQLALCHEMY_DATABASE_URI = os.environ.get('DEV_DATABASE_URL')
     SESSION_SECRET = os.environ.get("SECRET_KEY")
+    SECRET_KEY = os.environ.get("APP_SECRET_KEY")
+
     DEBUG = True
